@@ -24,6 +24,9 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+# 增加以下两行，确保容器内服务正确绑定在 5000 端口
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=5000
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
@@ -33,7 +36,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
 
-# Copy .next standalone build
+# Copy .next standalone build (现在 next.config.ts 修改后就不会报错了)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
 # Copy static files
