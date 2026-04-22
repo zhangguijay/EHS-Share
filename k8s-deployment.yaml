@@ -1,0 +1,81 @@
+# EHS Management Platform - Kubernetes Deployment
+# For Tencent Cloud TKE or Alibaba Cloud ACK
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehs-app
+  labels:
+    app: ehs-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ehs-app
+  template:
+    metadata:
+      labels:
+        app: ehs-app
+    spec:
+      containers:
+      - name: ehs-app
+        image: your-registry.tencentcloudcr.com/ehs/ehs-app:latest
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "5000"
+        - name: NEXT_PUBLIC_SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ehs-secrets
+              key: supabase-url
+        - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ehs-secrets
+              key: supabase-anon-key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ehs-app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: ehs-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ehs-secrets
+type: Opaque
+stringData:
+  supabase-url: "https://your-project.supabase.co"
+  supabase-anon-key: "your-anon-key"
