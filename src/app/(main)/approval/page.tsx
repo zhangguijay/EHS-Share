@@ -1,6 +1,5 @@
 "use client";
 
-import MainLayout from "../../layout";
 import { useState } from "react";
 
 // Sample approval data
